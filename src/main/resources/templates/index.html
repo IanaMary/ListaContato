@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Inserir</title>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<script src="js/vue.js"></script>
+  	</head>
+  	<body>
+    	<div id="app">
+    		
+    		<ul>
+    			<li v-for="item in contacts" :key="item.name">{{item.name}} - {{item.phone}}  <button @click="deletar(item.id)">Deletar</button> <button @click="editar(item)">Editar</button></li>
+    		</ul>
+    		
+    		<hr />
+    	
+    		<h1>Inserir contato</h1>
+    		<label>Nome</label>
+    		<p><input type="text" v-model="contact.name" /></p>
+    		<label>Fone</label>
+    		<p><input type="tel" v-model="contact.phone" /></p>
+    		<p><button @click="enviar()">Inserir</button></p>
+    	</div>  	
+    	
+    	<script>
+    		new Vue({
+    			el: app,
+    			data: {
+    				contact: {
+    					name: "",
+        				phone: ""	
+    				},
+    				
+    				contacts: [],
+    				
+    				 isToEdit: false
+    			},
+    			
+    			
+    			mounted() {
+    				this.listarContatos();
+    			},
+    			
+    			methods: {
+    				listarContatos(){
+    					fetch("http://localhost:8080/contacts")
+      					.then(res => {
+    						res.json().then(result => this.contacts = result)
+    					}, erro => {
+    						alert("Deu erro -> "+erro)
+    					})
+    				},
+    				
+    				enviar(){    					
+    				    if(!this.isToEdit){
+    				        fetch("http://localhost:8080/contacts", {
+    				            method: "POST",
+    				            headers: {
+    				                'Accept': 'application/json',
+    				                'Content-Type': 'application/json'
+    				            },
+    				            body: JSON.stringify(this.contact)
+    				            })
+    				        .then(res => {
+    				            alert("Contato salvo")
+    				            this.listarContatos();
+    				        }, erro => {
+    				            alert("Deu erro -> "+erro)
+    				        })
+    				    }else {
+
+    				        fetch("http://localhost:8080/contacts", {
+    				            method: "PUT",
+    				            headers: {
+    				                'Accept': 'application/json',
+    				                'Content-Type': 'application/json'
+    				            },
+    				            body: JSON.stringify(this.contact)
+    				            })
+    				        .then(res => {
+    				            alert("Contato editado")
+    				            this.isToEdit = false;
+    				            this.contact = { name: "", phone: "" };
+    				            this.listarContatos();
+    				        }, erro => {
+    				            alert("Deu erro -> "+erro)
+    				        })
+
+    				    }
+    				},
+    				
+    				deletar(id){    					
+    					fetch("http://localhost:8080/contacts/"+id, {
+    						method: "DELETE"
+      					 })
+      					.then(res => {
+    						alert("Contato deletado")
+        					this.listarContatos();
+    					}, erro => {
+    						alert("Deu erro -> "+erro)
+    					})
+    				},
+    				
+    				editar(item){
+    					  this.isToEdit = true;
+    					  this.contact = item; 
+    					}
+    			
+    				}
+    		})
+    	</script>
+  	</body>
+</html>
